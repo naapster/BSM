@@ -1,10 +1,12 @@
 package com.example.bsm11;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.KeyguardManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -16,9 +18,15 @@ import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
+import java.util.Base64;
 
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -29,7 +37,9 @@ public class MainActivity extends AppCompatActivity {
     Button buttonLogin;
     TextView textShared;
     static SharedPreferences utils;
-
+    static SharedPreferences utilsNote;
+/*    private static String secretKey = "boooooooooom!!!!";
+    private static String salt = "ssshhhhhhhhhhh!!!!";*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,24 +49,32 @@ public class MainActivity extends AppCompatActivity {
         login = findViewById(R.id.editLogin);
         password = findViewById(R.id.editPassword);
         buttonLogin = findViewById(R.id.buttonLogin);
-        textShared = findViewById(R.id.textShared);
         utils = getSharedPreferences("password", MODE_PRIVATE);
+        utilsNote = getSharedPreferences("note", MODE_PRIVATE);
         login.setText("Michal");
+
+/*        try {
+            String haslo = generateStorngPasswordHash("password");
+            saveData(haslo);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (InvalidKeySpecException e) {
+            e.printStackTrace();
+        }*/
+
         buttonLogin.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
                 try {
-                    String interSaltHash = generateStorngPasswordHash("password");
-                    saveData(interSaltHash);
                     if (validatePassword(password.getText().toString(),loadData()))
                     {
-                        Intent intent = new Intent(MainActivity.this, AfterLoginActivity.class);
+                        Intent intent = new Intent(MainActivity.this, AfterLogin0.class);
                         startActivity(intent);
                     }
                     else
                     {
-                        Toast.makeText(MainActivity.this, "nie udalo sie", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Incorrect password", Toast.LENGTH_SHORT).show();
                     }
 
                 } catch (NoSuchAlgorithmException e) {
@@ -132,9 +150,30 @@ public class MainActivity extends AppCompatActivity {
         }
         return diff == 0;
     }
+
+    public static String getSalt(String storedPassword){
+        String[] parts = storedPassword.split(":");
+        String salt = parts[1];
+        return salt;
+    }
+
+    public static String getSecretKey(String storedPassword)
+    {
+        String[] parts = storedPassword.split(":");
+        String secretKey = parts[2];
+        return secretKey;
+    }
+
     public static void saveData(String hashcode){
         SharedPreferences.Editor editor = utils.edit();
         editor.putString("password",hashcode);
+        editor.commit();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public static void saveDataNote(String note){
+        SharedPreferences.Editor editor = utilsNote.edit();
+        editor.putString("Note",encrypt(note, getSecretKey(loadData()), getSalt(loadData())));
         editor.commit();
     }
 
@@ -144,5 +183,62 @@ public class MainActivity extends AppCompatActivity {
         return loadFromPref;
     }
 
+    public static String loadDataNotes(){
+        String loadFromPref = utilsNote.getString("Note","");
+        return decrypt(loadFromPref, getSecretKey(loadData()), getSalt(loadData()));
+    }
+
+    public static void changePassword(String newPass) {
+        SharedPreferences.Editor editor = utils.edit();
+        editor.remove("password");
+        editor.putString("password", newPass);
+        editor.commit();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public static String encrypt(String strToEncrypt, String secretKey1, String salt)
+    {
+        try
+        {
+            byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+            IvParameterSpec ivspec = new IvParameterSpec(iv);
+
+            SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+            KeySpec spec = new PBEKeySpec(secretKey1.toCharArray(), salt.getBytes(), 65536, 256);
+            SecretKey tmp = factory.generateSecret(spec);
+            SecretKeySpec secretKey = new SecretKeySpec(tmp.getEncoded(), "AES");
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivspec);
+            return Base64.getEncoder().encodeToString(cipher.doFinal(strToEncrypt.getBytes("UTF-8")));
+        }
+        catch (Exception e)
+        {
+            System.out.println("Error while encrypting: " + e.toString());
+        }
+        return null;
+    }
+
+
+    public static String decrypt(String strToDecrypt, String secretKey1, String salt) {
+        try
+        {
+            byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+            IvParameterSpec ivspec = new IvParameterSpec(iv);
+
+            SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+            KeySpec spec = new PBEKeySpec(secretKey1.toCharArray(), salt.getBytes(), 65536, 256);
+            SecretKey tmp = factory.generateSecret(spec);
+            SecretKeySpec secretKey = new SecretKeySpec(tmp.getEncoded(), "AES");
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, ivspec);
+            return new String(cipher.doFinal(Base64.getDecoder().decode(strToDecrypt)));
+        }
+        catch (Exception e) {
+            System.out.println("Error while decrypting: " + e.toString());
+        }
+        return null;
+    }
 }
 

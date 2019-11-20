@@ -6,30 +6,17 @@
     android:layout_height="match_parent"
     tools:context=".AfterLoginActivity">
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="90dp"
-        android:layout_height="59dp"
-        android:text="TextView"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.839" />
-
     <EditText
         android:id="@+id/editOld"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="104dp"
         android:ems="10"
         android:hint="OldPassword"
-        android:inputType="textPersonName"
-        app:layout_constraintBottom_toTopOf="@+id/textView"
+        android:inputType="textPassword"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.123" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
         android:id="@+id/editNew"
@@ -38,7 +25,7 @@
         android:layout_marginTop="104dp"
         android:ems="10"
         android:hint="NewPassword"
-        android:inputType="textPersonName"
+        android:inputType="textPassword"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editOld" />
@@ -47,21 +34,20 @@
         android:id="@+id/editNew1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
         android:ems="10"
         android:hint="NewPassword"
-        android:inputType="textPersonName"
-        app:layout_constraintBottom_toTopOf="@+id/textView"
+        android:inputType="textPassword"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editNew"
-        app:layout_constraintVertical_bias="0.095" />
+        app:layout_constraintTop_toBottomOf="@+id/editNew" />
 
     <Button
         android:id="@+id/buttonChange"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="64dp"
         android:text="ChangePassword"
-        app:layout_constraintBottom_toTopOf="@+id/textView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editNew1" />
